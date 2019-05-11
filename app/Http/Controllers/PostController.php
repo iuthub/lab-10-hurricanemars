@@ -6,6 +6,8 @@ use App\Like;
 use App\Post;
 use App\Tag;
 use Illuminate\Http\Request;
+use Auth;
+use Gate;
 
 class PostController extends Controller
 {
@@ -58,31 +60,38 @@ class PostController extends Controller
             'title' => $request->input('title'),
             'content' => $request->input('content')
         ]);
+        $post->user()->associate(Auth::user());
         $post->save();
         $post->tags()->attach($request->input('tags') === null ? [] : $request->input('tags'));
-
+        
         return redirect()->route('admin.index')->with('info', 'Post created, Title is: ' . $request->input('title'));
     }
 
     public function postAdminUpdate(Request $request)
     {
+        $post = Post::find($request->input('id'));
+        if(Gate::denies('update-post', $post)) {
+            return redirect()->back();
+        }
         $this->validate($request, [
             'title' => 'required|min:5',
             'content' => 'required|min:10'
         ]);
-        $post = Post::find($request->input('id'));
         $post->title = $request->input('title');
         $post->content = $request->input('content');
+        $post->tags()->sync($request->input('tags') === null ? [] : $request->input('tags'));
         $post->save();
 //        $post->tags()->detach();
 //        $post->tags()->attach($request->input('tags') === null ? [] : $request->input('tags'));
-        $post->tags()->sync($request->input('tags') === null ? [] : $request->input('tags'));
         return redirect()->route('admin.index')->with('info', 'Post edited, new Title is: ' . $request->input('title'));
     }
 
     public function getAdminDelete($id)
     {
         $post = Post::find($id);
+        if(Gate::denies('update-post', $post)) {
+            return redirect()->back();
+        }
         $post->likes()->delete();
         $post->tags()->detach();
         $post->delete();

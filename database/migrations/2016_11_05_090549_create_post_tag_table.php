@@ -11,8 +11,7 @@ class CreatePostTagTable extends Migration
      *
      * @return void
      */
-    public function up()
-    {
+    public function up() {
         Schema::create('post_tag', function (Blueprint $table) {
             $table->increments('id');
             $table->timestamps();
@@ -26,8 +25,7 @@ class CreatePostTagTable extends Migration
      *
      * @return void
      */
-    public function down()
-    {
+    public function down() {
         Schema::drop('post_tag');
     }
 }
